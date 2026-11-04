@@ -1,0 +1,1350 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>GALAXY STRIKER GB - Retro Handheld Space Shooter</title>
+  <style>
+    :root {
+      --gb-body: #d0d2c8;
+      --gb-body-shadow: #a5a89c;
+      --gb-bezel: #5c5b6a;
+      --gb-button-ab: #8b1d52;
+      --gb-button-ab-active: #5e1136;
+      --gb-dpad: #262729;
+      --gb-text: #222357;
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+
+    body {
+      margin: 0;
+      padding: 12px;
+      min-height: 100vh;
+      background: radial-gradient(circle at center, #1e293b 0%, #090d16 100%);
+      font-family: 'Courier New', Courier, monospace;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #f8fafc;
+      overflow-x: hidden;
+    }
+
+    /* BODI GAME BOY */
+    .gameboy {
+      width: 370px;
+      max-width: 96vw;
+      background: linear-gradient(145deg, #dfdfd7 0%, var(--gb-body) 65%, #b8bab0 100%);
+      border-radius: 18px 18px 55px 18px;
+      padding: 20px 22px 28px 22px;
+      box-shadow:
+        inset 3px 3px 6px rgba(255,255,255,0.7),
+        inset -5px -6px 12px rgba(0,0,0,0.28),
+        0 22px 50px rgba(0,0,0,0.75);
+      border: 3px solid #8e9185;
+      position: relative;
+    }
+
+    /* Alur Dekorasi Atas Game Boy */
+    .gb-top-groove {
+      height: 8px;
+      border-bottom: 3px solid var(--gb-body-shadow);
+      margin: -10px -22px 14px -22px;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 26px;
+    }
+    .gb-top-groove span {
+      width: 4px;
+      height: 11px;
+      background: var(--gb-body-shadow);
+    }
+
+    /* BEZEL LAYAR */
+    .screen-bezel {
+      background: var(--gb-bezel);
+      border-radius: 12px 12px 34px 12px;
+      padding: 16px 20px 20px 20px;
+      box-shadow:
+        inset 0 4px 8px rgba(0,0,0,0.6),
+        0 2px 2px rgba(255,255,255,0.5);
+      position: relative;
+    }
+
+    .bezel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 9px;
+      font-weight: bold;
+      letter-spacing: 0.5px;
+      color: #d1d5db;
+      border-top: 2px solid #831f4f;
+      border-bottom: 2px solid #233876;
+      padding: 2px 4px;
+    }
+
+    .screen-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Indikator Baterai */
+    .battery-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      width: 34px;
+    }
+    .battery-led {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #ff2a2a;
+      box-shadow: 0 0 8px #ff2a2a, inset 0 0 3px #fff;
+      transition: 0.3s;
+    }
+    .battery-label {
+      font-size: 7px;
+      color: #cbd5e1;
+      letter-spacing: 0.4px;
+    }
+
+    /* KANVAS LCD */
+    .lcd-container {
+      flex: 1;
+      background: #8bac0f;
+      border: 4px solid #1e2318;
+      border-radius: 4px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: inset 0 0 12px rgba(0,0,0,0.45);
+      aspect-ratio: 1 / 1;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      image-rendering: pixelated;
+    }
+
+    /* Efek Garis Piksel LCD */
+    .lcd-scanlines {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.14) 50%),
+        linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+      background-size: 100% 3px, 4px 100%;
+      pointer-events: none;
+    }
+
+    /* Brand Nintendo / GameBoy style */
+    .brand-bar {
+      margin: 10px 4px 14px 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+    .brand-title {
+      font-family: Arial, Helvetica, sans-serif;
+      font-weight: 900;
+      font-style: italic;
+      font-size: 16px;
+      color: var(--gb-text);
+      letter-spacing: 0.5px;
+    }
+    .brand-sub {
+      font-size: 10px;
+      font-weight: bold;
+      color: #4b5563;
+    }
+
+    /* AREA KONTROL (D-PAD & TOMBOL A/B) */
+    .controls-main {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 10px 14px 10px;
+    }
+
+    /* D-PAD */
+    .dpad {
+      position: relative;
+      width: 112px;
+      height: 112px;
+    }
+    .dpad-btn {
+      position: absolute;
+      background: var(--gb-dpad);
+      border: 1px solid #111;
+      box-shadow: 0 3px 0 #09090b, inset 0 1px 1px rgba(255,255,255,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #6b7280;
+      font-size: 11px;
+      cursor: pointer;
+      touch-action: none;
+    }
+    .dpad-btn:active, .dpad-btn.active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 #09090b;
+      background: #3f3f46;
+      color: #fff;
+    }
+    .dpad-up {
+      top: 0; left: 37px; width: 38px; height: 40px;
+      border-radius: 5px 5px 0 0;
+    }
+    .dpad-down {
+      bottom: 0; left: 37px; width: 38px; height: 40px;
+      border-radius: 0 0 5px 5px;
+    }
+    .dpad-left {
+      top: 37px; left: 0; width: 40px; height: 38px;
+      border-radius: 5px 0 0 5px;
+    }
+    .dpad-right {
+      top: 37px; right: 0; width: 40px; height: 38px;
+      border-radius: 0 5px 5px 0;
+    }
+    .dpad-center {
+      position: absolute;
+      top: 37px; left: 37px; width: 38px; height: 38px;
+      background: var(--gb-dpad);
+      z-index: 2;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .dpad-center::after {
+      content: '';
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #18181b 30%, #2e2e33 100%);
+    }
+
+    /* TOMBOL A & B */
+    .ab-cluster {
+      display: flex;
+      gap: 18px;
+      background: rgba(0,0,0,0.08);
+      padding: 12px 16px;
+      border-radius: 40px;
+      transform: rotate(-24deg);
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+    }
+    .ab-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-round {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #b8296d, var(--gb-button-ab));
+      border: 2px solid #4a0e2b;
+      box-shadow: 0 4px 0 #390920, 0 6px 10px rgba(0,0,0,0.35);
+      cursor: pointer;
+      touch-action: none;
+    }
+    .btn-round:active, .btn-round.active {
+      transform: translateY(3px);
+      background: var(--gb-button-ab-active);
+      box-shadow: 0 1px 0 #390920;
+    }
+    .ab-label {
+      font-family: Arial, sans-serif;
+      font-weight: 900;
+      font-size: 13px;
+      color: var(--gb-text);
+      letter-spacing: 1px;
+    }
+
+    /* TOMBOL SELECT & START */
+    .meta-controls {
+      display: flex;
+      justify-content: center;
+      gap: 28px;
+      margin-top: 10px;
+      padding-bottom: 6px;
+    }
+    .pill-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-pill {
+      width: 44px;
+      height: 13px;
+      background: #4b5563;
+      border-radius: 10px;
+      border: 1px solid #1f2937;
+      transform: rotate(-24deg);
+      box-shadow: 0 2px 0 #1f2937, inset 0 1px 1px rgba(255,255,255,0.3);
+      cursor: pointer;
+    }
+    .btn-pill:active {
+      transform: rotate(-24deg) translateY(2px);
+      box-shadow: none;
+    }
+    .pill-label {
+      font-size: 9px;
+      font-weight: 900;
+      color: var(--gb-text);
+      letter-spacing: 0.8px;
+      margin-top: 2px;
+    }
+
+    /* GRILL SPEAKER KANAN BAWAH */
+    .speaker-grill {
+      position: absolute;
+      bottom: 18px;
+      right: 18px;
+      display: flex;
+      gap: 6px;
+      transform: rotate(-28deg);
+    }
+    .speaker-slot {
+      width: 5px;
+      height: 30px;
+      background: #52534e;
+      border-radius: 4px;
+      box-shadow: inset 1px 1px 2px #1c1d1a;
+    }
+
+    /* Panduan Singkat di Bawah */
+    .help-panel {
+      margin-top: 12px;
+      font-size: 12px;
+      color: #cbd5e1;
+      text-align: center;
+      max-width: 370px;
+      line-height: 1.5;
+      background: rgba(15, 23, 42, 0.75);
+      padding: 8px 14px;
+      border-radius: 10px;
+      border: 1px solid #334155;
+    }
+    .kbd {
+      background: #334155;
+      padding: 1px 6px;
+      border-radius: 4px;
+      color: #fde047;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="gameboy">
+    <div class="gb-top-groove">
+      <span></span><span></span>
+    </div>
+
+    <div class="screen-bezel">
+      <div class="bezel-header">
+        <span>DOT MATRIX WITH STEREO SOUND</span>
+        <span id="modeLabel">MODE: COLOR</span>
+      </div>
+
+      <div class="screen-row">
+        <div class="battery-wrap">
+          <div class="battery-led" id="batteryLed"></div>
+          <span class="battery-label">BATTERY</span>
+        </div>
+
+        <div class="lcd-container">
+          <canvas id="gameCanvas" width="240" height="240"></canvas>
+          <div class="lcd-scanlines"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="brand-bar">
+      <div class="brand-title">GAME BOY <span style="font-size:11px;font-style:normal;color:#7c2d12;">GALAXY EDITION</span></div>
+      <div class="brand-sub" id="soundStatus">🔊 SFX ON</div>
+    </div>
+
+    <!-- KONTROL UTAMA -->
+    <div class="controls-main">
+      <!-- D-PAD -->
+      <div class="dpad">
+        <div class="dpad-btn dpad-up" data-dir="up">▲</div>
+        <div class="dpad-btn dpad-down" data-dir="down">▼</div>
+        <div class="dpad-btn dpad-left" data-dir="left">◀</div>
+        <div class="dpad-btn dpad-right" data-dir="right">▶</div>
+        <div class="dpad-center"></div>
+      </div>
+
+      <!-- TOMBOL B & A -->
+      <div class="ab-cluster">
+        <div class="ab-wrap">
+          <div class="btn-round" id="btnB" title="Bom Nova (X / Shift)"></div>
+          <span class="ab-label">B</span>
+        </div>
+        <div class="ab-wrap">
+          <div class="btn-round" id="btnA" title="Tembak Laser (Z / Spasi)"></div>
+          <span class="ab-label">A</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SELECT & START -->
+    <div class="meta-controls">
+      <div class="pill-wrap">
+        <div class="btn-pill" id="btnSelect" title="Ubah Warna Layar (C)"></div>
+        <span class="pill-label">SELECT</span>
+      </div>
+      <div class="pill-wrap">
+        <div class="btn-pill" id="btnStart" title="Mulai / Pause (Enter)"></div>
+        <span class="pill-label">START</span>
+      </div>
+    </div>
+
+    <!-- SPEAKER -->
+    <div class="speaker-grill">
+      <div class="speaker-slot"></div>
+      <div class="speaker-slot"></div>
+      <div class="speaker-slot"></div>
+      <div class="speaker-slot"></div>
+      <div class="speaker-slot"></div>
+    </div>
+  </div>
+
+  <div class="help-panel">
+    <span class="kbd">A / Spasi / Z</span> Tembak Laser &nbsp;|&nbsp;
+    <span class="kbd">B / X</span> Bom Nova &nbsp;|&nbsp;
+    <span class="kbd">START / Enter</span> Mulai/Jeda &nbsp;|&nbsp;
+    <span class="kbd">SELECT / C</span> Mode Layar Hijau GB / Warna
+  </div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  // --- AUDIO CHIPTUNE SYNTHESIZER (Web Audio API) ---
+  let audioCtx = null;
+  function initAudio() {
+    if (!audioCtx) {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new AudioContext();
+    }
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  }
+
+  function playTone(freq, type = 'square', duration = 0.1, vol = 0.08, slideTo = null) {
+    if (!audioCtx) return;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    if (slideTo) {
+      osc.frequency.exponentialRampToValueAtTime(slideTo, audioCtx.currentTime + duration);
+    }
+    gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + duration);
+  }
+
+  const sfx = {
+    shoot: () => playTone(720, 'square', 0.08, 0.06, 220),
+    powerShoot: () => playTone(920, 'sawtooth', 0.1, 0.07, 300),
+    hit: () => playTone(190, 'sawtooth', 0.09, 0.08, 70),
+    explode: () => {
+      playTone(130, 'sawtooth', 0.25, 0.12, 35);
+      setTimeout(() => playTone(90, 'square', 0.2, 0.1, 25), 50);
+    },
+    powerup: () => {
+      [440, 554, 659, 880].forEach((f, i) =>
+        setTimeout(() => playTone(f, 'square', 0.09, 0.08), i * 55)
+      );
+    },
+    bossWarn: () => {
+      [220, 440, 220, 440].forEach((f, i) =>
+        setTimeout(() => playTone(f, 'sawtooth', 0.18, 0.1), i * 190)
+      );
+    },
+    nova: () => {
+      playTone(600, 'sawtooth', 0.45, 0.14, 40);
+    },
+    levelUp: () => {
+      [523, 659, 784, 1046].forEach((f, i) =>
+        setTimeout(() => playTone(f, 'square', 0.14, 0.09), i * 90)
+      );
+    },
+    playerHit: () => {
+      playTone(300, 'sawtooth', 0.35, 0.13, 55);
+    }
+  };
+
+  // --- PALET LAYAR (Klasik Hijau GameBoy vs Arcade Color) ---
+  let greenMode = false;
+  const palettes = {
+    color: {
+      bg: '#060913',
+      star: '#94a3b8',
+      player: '#38bdf8',
+      playerCore: '#fde047',
+      bullet: '#facc15',
+      bulletPlasma: '#c084fc',
+      enemy1: '#f43f5e',
+      enemy2: '#fb923c',
+      enemy3: '#a855f7',
+      enemy4: '#22c55e',
+      boss: '#ef4444',
+      bossCore: '#fef08a',
+      hudText: '#f8fafc',
+      heart: '#ef4444'
+    },
+    dmg: {
+      bg: '#0f380f',
+      star: '#306230',
+      player: '#9bbc0f',
+      playerCore: '#8bac0f',
+      bullet: '#9bbc0f',
+      bulletPlasma: '#8bac0f',
+      enemy1: '#8bac0f',
+      enemy2: '#8bac0f',
+      enemy3: '#9bbc0f',
+      enemy4: '#8bac0f',
+      boss: '#9bbc0f',
+      bossCore: '#306230',
+      hudText: '#9bbc0f',
+      heart: '#9bbc0f'
+    }
+  };
+
+  function P() {
+    return greenMode ? palettes.dmg : palettes.color;
+  }
+
+  // --- STATE INPUT ---
+  const keys = {
+    up: false, down: false, left: false, right: false,
+    a: false, b: false
+  };
+
+  // --- VARIABEL GAME ---
+  let state = 'TITLE'; // TITLE, PLAY, PAUSE, GAMEOVER
+  let score = 0;
+  let highScore = 0;
+  let level = 1;
+  let waveKills = 0;
+  let killsForBoss = 12;
+  let bossActive = false;
+  let bannerTimer = 0;
+  let bannerText = '';
+  let screenShake = 0;
+
+  // Bintang Latar
+  const stars = Array.from({ length: 42 }, () => ({
+    x: Math.random() * W,
+    y: Math.random() * H,
+    speed: 0.4 + Math.random() * 1.8,
+    size: Math.random() > 0.7 ? 2 : 1
+  }));
+
+  // Pemain
+  const player = {
+    x: W / 2 - 8,
+    y: H - 34,
+    w: 16,
+    h: 16,
+    speed: 2.6,
+    lives: 3, // 3 NYAWA
+    maxLives: 3,
+    weaponType: 1, // 1: Single, 2: Twin Laser, 3: Triple Spread, 4: Heavy Ion
+    weaponNames: ['', 'SINGLE', 'TWIN', 'SPREAD', 'ION BEAM'],
+    bombs: 2,
+    fireCooldown: 0,
+    invuln: 0
+  };
+
+  let bullets = [];
+  let enemyBullets = [];
+  let enemies = [];
+  let powerups = [];
+  let particles = [];
+  let boss = null;
+  let spawnTimer = 0;
+
+  function showBanner(txt, duration = 110) {
+    bannerText = txt;
+    bannerTimer = duration;
+  }
+
+  function resetGame() {
+    score = 0;
+    level = 1;
+    waveKills = 0;
+    killsForBoss = 10;
+    bossActive = false;
+    boss = null;
+    player.x = W / 2 - 8;
+    player.y = H - 34;
+    player.lives = 3;
+    player.weaponType = 1;
+    player.bombs = 2;
+    player.invuln = 60;
+    bullets = [];
+    enemyBullets = [];
+    enemies = [];
+    powerups = [];
+    particles = [];
+    state = 'PLAY';
+    showBanner('LEVEL 1 - SIAP TEMPUR!', 100);
+    sfx.levelUp();
+  }
+
+  // --- EFEK PARTIKEL LEDAKAN ---
+  function spawnExplosion(x, y, color, count = 12) {
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const spd = 0.6 + Math.random() * 2.6;
+      particles.push({
+        x, y,
+        vx: Math.cos(angle) * spd,
+        vy: Math.sin(angle) * spd,
+        life: 18 + Math.random() * 15,
+        color,
+        size: Math.random() > 0.5 ? 3 : 2
+      });
+    }
+  }
+
+  // --- TEMBAKAN PEMAIN (VARIASI SENJATA) ---
+  function firePlayerWeapon() {
+    if (player.fireCooldown > 0) return;
+    const cx = player.x + player.w / 2;
+    const cy = player.y;
+
+    if (player.weaponType === 1) {
+      // Single Laser
+      bullets.push({ x: cx - 1.5, y: cy, vx: 0, vy: -5.2, w: 3, h: 7, dmg: 1, type: 'normal' });
+      player.fireCooldown = 11;
+      sfx.shoot();
+    } else if (player.weaponType === 2) {
+      // Twin Blaster
+      bullets.push({ x: player.x + 1, y: cy + 2, vx: 0, vy: -5.5, w: 3, h: 7, dmg: 1, type: 'normal' });
+      bullets.push({ x: player.x + player.w - 4, y: cy + 2, vx: 0, vy: -5.5, w: 3, h: 7, dmg: 1, type: 'normal' });
+      player.fireCooldown = 10;
+      sfx.shoot();
+    } else if (player.weaponType === 3) {
+      // 3-Way Spread Plasma
+      bullets.push({ x: cx - 1.5, y: cy, vx: 0, vy: -5.5, w: 3, h: 7, dmg: 1, type: 'plasma' });
+      bullets.push({ x: cx - 1.5, y: cy + 2, vx: -1.6, vy: -5.0, w: 3, h: 6, dmg: 1, type: 'plasma' });
+      bullets.push({ x: cx - 1.5, y: cy + 2, vx: 1.6, vy: -5.0, w: 3, h: 6, dmg: 1, type: 'plasma' });
+      player.fireCooldown = 12;
+      sfx.powerShoot();
+    } else if (player.weaponType >= 4) {
+      // Heavy Ion + Side Wing
+      bullets.push({ x: cx - 3, y: cy - 2, vx: 0, vy: -6.5, w: 6, h: 11, dmg: 2.2, type: 'ion' });
+      bullets.push({ x: player.x - 2, y: cy + 4, vx: -1.2, vy: -5.2, w: 3, h: 6, dmg: 1, type: 'plasma' });
+      bullets.push({ x: player.x + player.w - 1, y: cy + 4, vx: 1.2, vy: -5.2, w: 3, h: 6, dmg: 1, type: 'plasma' });
+      player.fireCooldown = 11;
+      sfx.powerShoot();
+    }
+  }
+
+  // --- BOM NOVA (TOMBOL B) ---
+  function triggerNovaBomb() {
+    if (player.bombs <= 0 || state !== 'PLAY') return;
+    player.bombs--;
+    sfx.nova();
+    screenShake = 16;
+    enemyBullets = []; // Hapus semua peluru musuh di layar
+
+    // Beri kerusakan besar ke semua musuh
+    enemies.forEach(e => {
+      e.hp -= 8;
+      spawnExplosion(e.x + e.w / 2, e.y + e.h / 2, P().bullet, 6);
+    });
+    if (boss) {
+      boss.hp -= 18;
+      spawnExplosion(boss.x + boss.w / 2, boss.y + boss.h / 2, P().bullet, 16);
+    }
+    showBanner('⚡ SUPER NOVA! ⚡', 45);
+  }
+
+  // --- SPAWN MUSUH REGULER (VARIASI SESUAI LEVEL) ---
+  function spawnEnemy() {
+    // Semakin tinggi level, variasi musuh makin beragam & kuat
+    const maxVariant = Math.min(4, 1 + Math.floor(level / 1));
+    const type = 1 + Math.floor(Math.random() * maxVariant);
+    const x = 14 + Math.random() * (W - 44);
+    const hpBoost = Math.floor((level - 1) * 0.8);
+
+    if (type === 1) {
+      // Tipe 1: Scout TIE (Gerak Zig-Zag Cepat)
+      enemies.push({
+        type: 1, x, y: -16, w: 14, h: 14,
+        vx: (Math.random() > 0.5 ? 1 : -1) * (1.1 + level * 0.1),
+        vy: 1.0 + level * 0.12,
+        hp: 1 + hpBoost, maxHp: 1 + hpBoost,
+        shootTimer: 50 + Math.random() * 50,
+        score: 100
+      });
+    } else if (type === 2) {
+      // Tipe 2: Interceptor (Menukik ke arah pemain)
+      enemies.push({
+        type: 2, x, y: -16, w: 15, h: 15,
+        vx: 0,
+        vy: 1.45 + level * 0.15,
+        hp: 2 + hpBoost, maxHp: 2 + hpBoost,
+        shootTimer: 40 + Math.random() * 40,
+        score: 150
+      });
+    } else if (type === 3) {
+      // Tipe 3: Heavy Gunship (Tahan banting & tembak ganda)
+      enemies.push({
+        type: 3, x, y: -20, w: 20, h: 18,
+        vx: 0.6,
+        vy: 0.65 + level * 0.08,
+        hp: 4 + hpBoost * 2, maxHp: 4 + hpBoost * 2,
+        shootTimer: 35,
+        score: 250
+      });
+    } else {
+      // Tipe 4: Elite Stealth Fighter (Tembakan menyebar)
+      enemies.push({
+        type: 4, x, y: -18, w: 16, h: 16,
+        vx: 1.5,
+        vy: 0.85 + level * 0.1,
+        hp: 3 + hpBoost * 1.5, maxHp: 3 + hpBoost * 1.5,
+        shootTimer: 30,
+        score: 300
+      });
+    }
+  }
+
+  // --- SPAWN MUSUH BOS SETIAP AKHIR LEVEL ---
+  function spawnBoss() {
+    bossActive = true;
+    sfx.bossWarn();
+    const bossNames = [
+      'DREADNOUGHT MK-I',
+      'CYBER SPIDER MK-II',
+      'STAR DESTROYER X',
+      'GALACTIC OVERLORD'
+    ];
+    const bName = bossNames[(level - 1) % bossNames.length];
+    const maxHp = 30 + (level - 1) * 22;
+
+    boss = {
+      name: bName,
+      x: W / 2 - 26,
+      y: -40,
+      w: 52,
+      h: 30,
+      vx: 1.2 + level * 0.18,
+      hp: maxHp,
+      maxHp: maxHp,
+      timer: 0,
+      pattern: (level - 1) % 3
+    };
+    showBanner('⚠️ AWAS BOS: ' + bName, 110);
+  }
+
+  // --- SPAWN POWER-UP DROP ---
+  function maybeSpawnPowerUp(x, y) {
+    if (Math.random() > 0.28) return; // 28% peluang jatuh item
+    const roll = Math.random();
+    let kind = 'W'; // Upgrade Senjata
+    if (roll > 0.78) kind = 'H'; // Extra Heart (Nyawa)
+    else if (roll > 0.55) kind = 'B'; // Extra Bom Nova
+
+    powerups.push({ x, y, w: 12, h: 12, vy: 1.1, kind });
+  }
+
+  // --- CEK TABRAKAN KOTAK (AABB) ---
+  function rectHit(a, b) {
+    return (
+      a.x < b.x + b.w &&
+      a.x + a.w > b.x &&
+      a.y < b.y + b.h &&
+      a.y + a.h > b.y
+    );
+  }
+
+  function damagePlayer() {
+    if (player.invuln > 0) return;
+    player.lives--;
+    player.invuln = 90;
+    screenShake = 12;
+    sfx.playerHit();
+    spawnExplosion(player.x + 8, player.y + 8, P().enemy1, 16);
+
+    // Turunkan 1 level senjata jika tertembak (minimal 1)
+    if (player.weaponType > 1) player.weaponType--;
+
+    if (player.lives <= 0) {
+      state = 'GAMEOVER';
+      if (score > highScore) highScore = score;
+    }
+  }
+
+  // --- UPDATE LOGIKA GAME ---
+  function update() {
+    // Gerak Bintang
+    stars.forEach(s => {
+      s.y += s.speed + (bossActive ? 1.2 : 0);
+      if (s.y > H) {
+        s.y = 0;
+        s.x = Math.random() * W;
+      }
+    });
+
+    if (state !== 'PLAY') return;
+
+    if (bannerTimer > 0) bannerTimer--;
+    if (screenShake > 0) screenShake--;
+    if (player.invuln > 0) player.invuln--;
+    if (player.fireCooldown > 0) player.fireCooldown--;
+
+    // Gerak Pesawat Pemain
+    if (keys.left && player.x > 6) player.x -= player.speed;
+    if (keys.right && player.x < W - player.w - 6) player.x += player.speed;
+    if (keys.up && player.y > 32) player.y -= player.speed;
+    if (keys.down && player.y < H - player.h - 8) player.y += player.speed;
+
+    if (keys.a) firePlayerWeapon();
+
+    // Update Peluru Pemain
+    for (let i = bullets.length - 1; i >= 0; i--) {
+      const b = bullets[i];
+      b.x += b.vx;
+      b.y += b.vy;
+      if (b.y < -12 || b.x < -10 || b.x > W + 10) {
+        bullets.splice(i, 1);
+      }
+    }
+
+    // Spawn Musuh atau Bos
+    if (!bossActive) {
+      if (waveKills >= killsForBoss) {
+        spawnBoss();
+      } else {
+        spawnTimer++;
+        const spawnInterval = Math.max(24, 58 - level * 5);
+        if (spawnTimer >= spawnInterval) {
+          spawnTimer = 0;
+          spawnEnemy();
+        }
+      }
+    }
+
+    // Update Musuh Reguler
+    for (let i = enemies.length - 1; i >= 0; i--) {
+      const e = enemies[i];
+      e.y += e.vy;
+
+      if (e.type === 1 || e.type === 3 || e.type === 4) {
+        e.x += e.vx;
+        if (e.x < 8 || e.x > W - e.w - 8) e.vx *= -1;
+      } else if (e.type === 2) {
+        // Mengejar posisi X pemain perlahan
+        if (e.x < player.x) e.x += 0.65;
+        else if (e.x > player.x) e.x -= 0.65;
+      }
+
+      // Tembakan Musuh
+      e.shootTimer--;
+      if (e.shootTimer <= 0 && e.y > 10 && e.y < H - 55) {
+        const cx = e.x + e.w / 2;
+        const cy = e.y + e.h;
+        if (e.type === 3) {
+          enemyBullets.push({ x: cx - 6, y: cy, vx: 0, vy: 2.4 + level * 0.15, r: 3 });
+          enemyBullets.push({ x: cx + 4, y: cy, vx: 0, vy: 2.4 + level * 0.15, r: 3 });
+        } else if (e.type === 4) {
+          enemyBullets.push({ x: cx, y: cy, vx: -1, vy: 2.3, r: 3 });
+          enemyBullets.push({ x: cx, y: cy, vx: 0, vy: 2.6, r: 3 });
+          enemyBullets.push({ x: cx, y: cy, vx: 1, vy: 2.3, r: 3 });
+        } else {
+          enemyBullets.push({ x: cx, y: cy, vx: 0, vy: 2.2 + level * 0.15, r: 3 });
+        }
+        e.shootTimer = Math.max(35, 85 - level * 6);
+      }
+
+      // Cek tabrakan peluru pemain ke musuh
+      for (let j = bullets.length - 1; j >= 0; j--) {
+        if (rectHit(bullets[j], e)) {
+          e.hp -= bullets[j].dmg;
+          bullets.splice(j, 1);
+          sfx.hit();
+          break;
+        }
+      }
+
+      // Cek tabrakan badan musuh dengan pemain
+      if (rectHit(e, player)) {
+        e.hp = 0;
+        damagePlayer();
+      }
+
+      if (e.hp <= 0) {
+        score += e.score;
+        waveKills++;
+        sfx.explode();
+        spawnExplosion(e.x + e.w / 2, e.y + e.h / 2, P().enemy1, 12);
+        maybeSpawnPowerUp(e.x + 2, e.y + 2);
+        enemies.splice(i, 1);
+      } else if (e.y > H + 20) {
+        enemies.splice(i, 1);
+      }
+    }
+
+    // Update Musuh BOS
+    if (boss) {
+      if (boss.y < 34) {
+        boss.y += 0.8;
+      } else {
+        boss.x += boss.vx;
+        if (boss.x < 10 || boss.x + boss.w > W - 10) boss.vx *= -1;
+      }
+
+      boss.timer++;
+      const fireRate = Math.max(24, 52 - level * 4);
+      if (boss.timer % fireRate === 0) {
+        const bx = boss.x + boss.w / 2;
+        const by = boss.y + boss.h;
+        // Pola serangan bervariasi sesuai Level
+        if (level % 2 === 1) {
+          // Kipas 3 arah + meriam samping
+          [-1.4, 0, 1.4].forEach(vx => {
+            enemyBullets.push({ x: bx, y: by, vx, vy: 2.5 + level * 0.1, r: 3.5 });
+          });
+        } else {
+          // Serangan 5 arah beruntun
+          [-1.8, -0.9, 0, 0.9, 1.8].forEach(vx => {
+            enemyBullets.push({ x: bx, y: by, vx, vy: 2.3 + level * 0.1, r: 3.5 });
+          });
+        }
+        sfx.hit();
+      }
+
+      // Cek peluru pemain mengenai Bos
+      for (let j = bullets.length - 1; j >= 0; j--) {
+        if (rectHit(bullets[j], boss)) {
+          boss.hp -= bullets[j].dmg;
+          spawnExplosion(bullets[j].x, bullets[j].y, P().bossCore, 3);
+          bullets.splice(j, 1);
+          break;
+        }
+      }
+
+      if (rectHit(boss, player)) {
+        damagePlayer();
+      }
+
+      // Bos Kalah -> Naik Level!
+      if (boss.hp <= 0) {
+        sfx.explode();
+        screenShake = 20;
+        spawnExplosion(boss.x + boss.w / 2, boss.y + boss.h / 2, P().bossCore, 32);
+        score += 1000 * level;
+        // Jatuhkan hadiah pasti setelah Bos kalah
+        powerups.push({ x: boss.x + boss.w / 2 - 6, y: boss.y + 10, w: 12, h: 12, vy: 1.0, kind: 'W' });
+        boss = null;
+        bossActive = false;
+        level++;
+        waveKills = 0;
+        killsForBoss = 10 + level * 3;
+        sfx.levelUp();
+        showBanner('★ LEVEL ' + level + ' NAIK! ★', 120);
+      }
+    }
+
+    // Update Peluru Musuh
+    for (let i = enemyBullets.length - 1; i >= 0; i--) {
+      const eb = enemyBullets[i];
+      eb.x += eb.vx;
+      eb.y += eb.vy;
+      if (
+        eb.x > player.x + 2 &&
+        eb.x < player.x + player.w - 2 &&
+        eb.y > player.y + 2 &&
+        eb.y < player.y + player.h - 2
+      ) {
+        enemyBullets.splice(i, 1);
+        damagePlayer();
+        continue;
+      }
+      if (eb.y > H + 10 || eb.x < -10 || eb.x > W + 10) {
+        enemyBullets.splice(i, 1);
+      }
+    }
+
+    // Update Item Power-Up
+    for (let i = powerups.length - 1; i >= 0; i--) {
+      const p = powerups[i];
+      p.y += p.vy;
+      if (rectHit(p, player)) {
+        sfx.powerup();
+        if (p.kind === 'W') {
+          player.weaponType = Math.min(4, player.weaponType + 1);
+          showBanner('SENJATA: ' + player.weaponNames[player.weaponType], 75);
+        } else if (p.kind === 'H') {
+          player.lives = Math.min(player.maxLives, player.lives + 1);
+          showBanner('+1 NYAWA TAMBAHAN!', 75);
+        } else if (p.kind === 'B') {
+          player.bombs = Math.min(5, player.bombs + 1);
+          showBanner('+1 BOM NOVA!', 75);
+        }
+        score += 150;
+        powerups.splice(i, 1);
+        continue;
+      }
+      if (p.y > H + 15) powerups.splice(i, 1);
+    }
+
+    // Update Partikel Ledakan
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const pt = particles[i];
+      pt.x += pt.vx;
+      pt.y += pt.vy;
+      pt.life--;
+      if (pt.life <= 0) particles.splice(i, 1);
+    }
+  }
+
+  // --- MENGGAMBAR SPRITE PIXEL ART ---
+  function drawHeart(x, y) {
+    ctx.fillStyle = P().heart;
+    ctx.fillRect(x + 1, y, 2, 2);
+    ctx.fillRect(x + 5, y, 2, 2);
+    ctx.fillRect(x, y + 1, 8, 3);
+    ctx.fillRect(x + 1, y + 4, 6, 2);
+    ctx.fillRect(x + 2, y + 6, 4, 1);
+    ctx.fillRect(x + 3, y + 7, 2, 1);
+  }
+
+  function drawPlayerShip(x, y) {
+    ctx.fillStyle = P().player;
+    // Ujung & Badan Pesawat X-Wing / Striker
+    ctx.fillRect(x + 7, y, 2, 4);
+    ctx.fillRect(x + 5, y + 4, 6, 6);
+    ctx.fillRect(x + 2, y + 8, 12, 5);
+    ctx.fillRect(x, y + 10, 3, 6);
+    ctx.fillRect(x + 13, y + 10, 3, 6);
+    // Kokpit & Thruster
+    ctx.fillStyle = P().playerCore;
+    ctx.fillRect(x + 7, y + 5, 2, 4);
+    if (Math.random() > 0.3) {
+      ctx.fillRect(x + 6, y + 13, 4, 3);
+    }
+  }
+
+  function drawEnemyShip(e) {
+    const { x, y, type } = e;
+    if (type === 1) {
+      // Scout TIE Fighter
+      ctx.fillStyle = P().enemy1;
+      ctx.fillRect(x, y + 1, 2, 12);
+      ctx.fillRect(x + 12, y + 1, 2, 12);
+      ctx.fillRect(x + 2, y + 6, 10, 2);
+      ctx.fillRect(x + 4, y + 4, 6, 6);
+    } else if (type === 2) {
+      // Interceptor V-Wing
+      ctx.fillStyle = P().enemy2;
+      ctx.fillRect(x + 2, y, 11, 4);
+      ctx.fillRect(x + 4, y + 4, 7, 6);
+      ctx.fillRect(x + 6, y + 10, 3, 5);
+      ctx.fillRect(x, y + 2, 3, 8);
+      ctx.fillRect(x + 12, y + 2, 3, 8);
+    } else if (type === 3) {
+      // Heavy Armored Gunship
+      ctx.fillStyle = P().enemy3;
+      ctx.fillRect(x + 3, y, 14, 12);
+      ctx.fillRect(x, y + 4, 20, 6);
+      ctx.fillRect(x + 4, y + 12, 4, 5);
+      ctx.fillRect(x + 12, y + 12, 4, 5);
+      ctx.fillStyle = P().bossCore;
+      ctx.fillRect(x + 8, y + 4, 4, 4);
+    } else {
+      // Stealth Fighter
+      ctx.fillStyle = P().enemy4;
+      ctx.fillRect(x + 6, y, 4, 15);
+      ctx.fillRect(x + 2, y + 4, 12, 6);
+      ctx.fillRect(x, y + 8, 16, 4);
+    }
+  }
+
+  function drawBossShip(b) {
+    ctx.fillStyle = P().boss;
+    ctx.fillRect(b.x + 8, b.y, b.w - 16, b.h - 4);
+    ctx.fillRect(b.x, b.y + 8, b.w, 14);
+    // Meriam Kiri-Kanan-Tengah
+    ctx.fillRect(b.x + 6, b.y + b.h - 4, 6, 6);
+    ctx.fillRect(b.x + b.w - 12, b.y + b.h - 4, 6, 6);
+    ctx.fillRect(b.x + b.w / 2 - 4, b.y + b.h - 4, 8, 7);
+    // Inti Reaktor
+    ctx.fillStyle = P().bossCore;
+    ctx.fillRect(b.x + b.w / 2 - 6, b.y + 8, 12, 10);
+
+    // Bar Darah Bos di Atas
+    const barW = 140;
+    const barX = (W - barW) / 2;
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(barX, 20, barW, 5);
+    ctx.fillStyle = P().boss;
+    ctx.fillRect(barX, 20, Math.max(0, (b.hp / b.maxHp) * barW), 5);
+  }
+
+  // --- RENDER KE LAYAR LCD ---
+  function draw() {
+    ctx.save();
+    if (screenShake > 0) {
+      ctx.translate((Math.random() - 0.5) * 5, (Math.random() - 0.5) * 5);
+    }
+
+    // Latar Belakang Angkasa
+    ctx.fillStyle = P().bg;
+    ctx.fillRect(0, 0, W, H);
+
+    // Bintang
+    ctx.fillStyle = P().star;
+    stars.forEach(s => ctx.fillRect(s.x, s.y, s.size, s.size));
+
+    if (state === 'TITLE') {
+      ctx.fillStyle = P().hudText;
+      ctx.font = 'bold 18px Courier New';
+      ctx.textAlign = 'center';
+      ctx.fillText('GALAXY STRIKER', W / 2, 62);
+      ctx.font = 'bold 11px Courier New';
+      ctx.fillText('★ PERANG BINTANG EDITION ★', W / 2, 82);
+
+      drawPlayerShip(W / 2 - 8, 105);
+
+      ctx.font = '10px Courier New';
+      ctx.fillText('3 NYAWA | 4 SENJATA | RAJA LEVEL', W / 2, 145);
+      ctx.fillText('A / SPASI : TEMBAK LASER', W / 2, 165);
+      ctx.fillText('B / X     : BOM SUPER NOVA', W / 2, 180);
+
+      if (Math.floor(Date.now() / 400) % 2 === 0) {
+        ctx.fillStyle = P().bullet;
+        ctx.font = 'bold 12px Courier New';
+        ctx.fillText('TEKAN START / A UNTUK MULAI', W / 2, 212);
+      }
+      ctx.restore();
+      return;
+    }
+
+    // Gambar Item Power-Up
+    powerups.forEach(p => {
+      ctx.fillStyle = p.kind === 'H' ? P().heart : p.kind === 'B' ? P().bulletPlasma : P().bullet;
+      ctx.fillRect(p.x, p.y, p.w, p.h);
+      ctx.fillStyle = P().bg;
+      ctx.font = 'bold 9px Courier New';
+      ctx.textAlign = 'center';
+      ctx.fillText(p.kind, p.x + 6, p.y + 9);
+    });
+
+    // Gambar Peluru Pemain
+    bullets.forEach(b => {
+      ctx.fillStyle = b.type === 'normal' ? P().bullet : P().bulletPlasma;
+      ctx.fillRect(b.x, b.y, b.w, b.h);
+    });
+
+    // Gambar Pesawat Pemain (Berkedip saat kebal sementara)
+    if (player.invuln % 4 < 2) {
+      drawPlayerShip(player.x, player.y);
+    }
+
+    // Gambar Musuh & Bos
+    enemies.forEach(drawEnemyShip);
+    if (boss) drawBossShip(boss);
+
+    // Gambar Peluru Musuh
+    ctx.fillStyle = P().enemy1;
+    enemyBullets.forEach(eb => {
+      ctx.beginPath();
+      ctx.arc(eb.x, eb.y, eb.r, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // Gambar Partikel
+    particles.forEach(pt => {
+      ctx.fillStyle = pt.color;
+      ctx.fillRect(pt.x, pt.y, pt.size, pt.size);
+    });
+
+    // --- HUD ATAS (3 NYAWA, SKOR, LEVEL, BOM) ---
+    ctx.fillStyle = 'rgba(0,0,0,0.55)';
+    ctx.fillRect(0, 0, W, 17);
+
+    // Gambar 3 Hati (Nyawa)
+    for (let i = 0; i < player.lives; i++) {
+      drawHeart(6 + i * 11, 4);
+    }
+
+    ctx.fillStyle = P().hudText;
+    ctx.font = 'bold 10px Courier New';
+    ctx.textAlign = 'left';
+    ctx.fillText('💣x' + player.bombs, 44, 12);
+
+    ctx.textAlign = 'center';
+    ctx.fillText('LV.' + level, W / 2 + 6, 12);
+
+    ctx.textAlign = 'right';
+    ctx.fillText(String(score).padStart(6, '0'), W - 6, 12);
+
+    // Banner Informasi Level / Power-Up
+    if (bannerTimer > 0) {
+      ctx.fillStyle = 'rgba(0,0,0,0.72)';
+      ctx.fillRect(10, H / 2 - 18, W - 20, 26);
+      ctx.strokeStyle = P().bullet;
+      ctx.strokeRect(10, H / 2 - 18, W - 20, 26);
+      ctx.fillStyle = P().bullet;
+      ctx.font = 'bold 11px Courier New';
+      ctx.textAlign = 'center';
+      ctx.fillText(bannerText, W / 2, H / 2 - 2);
+    }
+
+    // Layar Jeda (PAUSE)
+    if (state === 'PAUSE') {
+      ctx.fillStyle = 'rgba(0,0,0,0.65)';
+      ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = P().hudText;
+      ctx.font = 'bold 16px Courier New';
+      ctx.textAlign = 'center';
+      ctx.fillText('- PAUSED -', W / 2, H / 2);
+    }
+
+    // Layar Kalah (GAME OVER)
+    if (state === 'GAMEOVER') {
+      ctx.fillStyle = 'rgba(0,0,0,0.78)';
+      ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = P().enemy1;
+      ctx.font = 'bold 18px Courier New';
+      ctx.textAlign = 'center';
+      ctx.fillText('GAME OVER', W / 2, H / 2 - 24);
+
+      ctx.fillStyle = P().hudText;
+      ctx.font = '11px Courier New';
+      ctx.fillText('SKOR AKHIR: ' + score, W / 2, H / 2 + 2);
+      ctx.fillText('CAPAI LEVEL: ' + level, W / 2, H / 2 + 18);
+      ctx.fillStyle = P().bullet;
+      ctx.fillText('TEKAN START / A MAIN LAGI', W / 2, H / 2 + 44);
+    }
+
+    ctx.restore();
+  }
+
+  function loop() {
+    update();
+    draw();
+    requestAnimationFrame(loop);
+  }
+  loop();
+
+  // --- KONTROL SENTUH & MOUSE DI GAME BOY ---
+  function bindHoldButton(elem, keyName, onPress) {
+    const start = (e) => {
+      e.preventDefault();
+      initAudio();
+      keys[keyName] = true;
+      elem.classList.add('active');
+      if (onPress) onPress();
+    };
+    const end = (e) => {
+      e.preventDefault();
+      keys[keyName] = false;
+      elem.classList.remove('active');
+    };
+    elem.addEventListener('mousedown', start);
+    elem.addEventListener('touchstart', start, { passive: false });
+    window.addEventListener('mouseup', end);
+    elem.addEventListener('touchend', end);
+    elem.addEventListener('touchcancel', end);
+  }
+
+  document.querySelectorAll('.dpad-btn').forEach(btn => {
+    bindHoldButton(btn, btn.dataset.dir);
+  });
+
+  bindHoldButton(document.getElementById('btnA'), 'a', () => {
+    if (state === 'TITLE' || state === 'GAMEOVER') resetGame();
+  });
+
+  bindHoldButton(document.getElementById('btnB'), 'b', () => {
+    triggerNovaBomb();
+  });
+
+  document.getElementById('btnStart').addEventListener('click', () => {
+    initAudio();
+    if (state === 'TITLE' || state === 'GAMEOVER') resetGame();
+    else if (state === 'PLAY') state = 'PAUSE';
+    else if (state === 'PAUSE') state = 'PLAY';
+  });
+
+  document.getElementById('btnSelect').addEventListener('click', () => {
+    initAudio();
+    greenMode = !greenMode;
+    document.getElementById('modeLabel').textContent = greenMode ? 'MODE: GB GREEN' : 'MODE: COLOR';
+    sfx.shoot();
+  });
+
+  // --- KONTROL KEYBOARD ---
+  window.addEventListener('keydown', (e) => {
+    initAudio();
+    const k = e.key.toLowerCase();
+    if (['arrowup', 'w'].includes(k)) keys.up = true;
+    if (['arrowdown', 's'].includes(k)) keys.down = true;
+    if (['arrowleft', 'a'].includes(k)) keys.left = true;
+    if (['arrowright', 'd'].includes(k)) keys.right = true;
+
+    if (k === 'z' || k === ' ') {
+      keys.a = true;
+      if (state === 'TITLE' || state === 'GAMEOVER') resetGame();
+    }
+    if (k === 'x' || k === 'shift') {
+      if (!keys.b) triggerNovaBomb();
+      keys.b = true;
+    }
+    if (k === 'enter') {
+      if (state === 'TITLE' || state === 'GAMEOVER') resetGame();
+      else if (state === 'PLAY') state = 'PAUSE';
+      else if (state === 'PAUSE') state = 'PLAY';
+    }
+    if (k === 'c') {
+      greenMode = !greenMode;
+      document.getElementById('modeLabel').textContent = greenMode ? 'MODE: GB GREEN' : 'MODE: COLOR';
+    }
+  });
+
+  window.addEventListener('keyup', (e) => {
+    const k = e.key.toLowerCase();
+    if (['arrowup', 'w'].includes(k)) keys.up = false;
+    if (['arrowdown', 's'].includes(k)) keys.down = false;
+    if (['arrowleft', 'a'].includes(k)) keys.left = false;
+    if (['arrowright', 'd'].includes(k)) keys.right = false;
+    if (k === 'z' || k === ' ') keys.a = false;
+    if (k === 'x' || k === 'shift') keys.b = false;
+  });
+})();
+</script>
+</body>
+</html>
