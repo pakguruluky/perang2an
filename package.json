@@ -1,0 +1,17 @@
+{
+  "name": "galaxy-striker-gb",
+  "version": "1.0.0",
+  "description": "Retro Game Boy Space Shooter HTML5 Game - Galaxy Striker GB",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve ."
+  },
+  "keywords": [
+    "gameboy",
+    "retro-game",
+    "space-shooter",
+    "html5-canvas",
+    "makecode-style"
+  ],
+  "license": "MIT"
+}
